@@ -64,7 +64,10 @@
         "useragent-from-seed": "^1.0.1"
     },
     "devDependencies": {
+        "@types/is-url": "^1.2.30",
         "@types/node": "^16.4.8",
+        "@types/request-promise-native": "^1.0.18",
+        "@types/tough-cookie": "^4.0.1",
         "ava": "^2.4.0",
         "eslint-config-prettier": "^2.10.0",
         "husky": "^3.0.9",

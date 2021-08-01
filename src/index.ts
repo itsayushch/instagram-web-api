@@ -12,8 +12,8 @@ const baseUrl = 'https://www.instagram.com';
 
 class Instagram {
     private credentials: {
-        username: string;
-        password: string;
+        username: string | undefined;
+        password: string | undefined;
         cookies?: Cookie;
     };
     private request: RequestPromiseAPI;
@@ -37,7 +37,7 @@ class Instagram {
         };
 
         const jar = request.jar(cookieStore);
-        jar.setCookie(request.cookie('ig_cb=1'), baseUrl);
+        jar.setCookie(request.cookie('ig_cb=1') as Cookie, baseUrl);
         const { value: csrftoken } =
             jar.getCookies(baseUrl).find(({ key }) => key === 'csrftoken') ||
             {};
@@ -83,7 +83,7 @@ class Instagram {
         });
 
         // Temporary work around for https://github.com/jlobos/instagram-web-api/issues/118
-        const createEncPassword = pwd => {
+        const createEncPassword = (pwd: string | undefined) => {
             return `#PWD_INSTAGRAM_BROWSER:0:${Date.now()}:${pwd}`;
         };
 
@@ -100,7 +100,7 @@ class Instagram {
 
         // Get CSRFToken after successful login
         const { value: csrftoken } = cookies
-            .find(({ key }) => key === 'csrftoken')
+            .find(({ key }: { key: string }) => key === 'csrftoken')
             .toJSON();
 
         // Provide CSRFToken to request
@@ -134,7 +134,7 @@ class Instagram {
             .then(_sharedData => JSON.parse(_sharedData));
     }
 
-    async _getGis(path) {
+    async _getGis(path: string) {
         const { rhx_gis } =
             this._sharedData || (await this._getSharedData(path));
 
@@ -148,7 +148,13 @@ class Instagram {
         return this.request('/accounts/logout/ajax/');
     }
 
-    async _getHomeData({ queryHash, variables }) {
+    async _getHomeData({
+        queryHash,
+        variables
+    }: {
+        queryHash?: string;
+        variables?: any;
+    }) {
         return this.request('/graphql/query/', {
             qs: {
                 query_hash: queryHash,
@@ -157,7 +163,7 @@ class Instagram {
         }).then(data => data);
     }
 
-    async getHome(mediaItemCursor) {
+    async getHome(mediaItemCursor: string) {
         return this._getHomeData({
             queryHash: '01b3ccff4136c4adf5e67e1dd7eab68d',
             variables: {
@@ -166,7 +172,7 @@ class Instagram {
         });
     }
 
-    async getUserByUsername({ username }) {
+    async getUserByUsername({ username }: { username: string }) {
         return this.request({
             uri: `/${username}/?__a=1`,
             headers: {
@@ -189,7 +195,7 @@ class Instagram {
                 data => data.data.user.feed_reels_tray.edge_reels_tray_to_reel
             )
             .then(edge_reels_tray_to_reel => edge_reels_tray_to_reel.edges)
-            .then(edges => edges.map(edge => edge.node));
+            .then(edges => edges.map((edge: any) => edge.node));
     }
 
     async getStoryReels({
@@ -254,29 +260,37 @@ class Instagram {
         }).then(data => data.data);
     }
 
-    async getPhotosByUsername({ username, first, after }) {
+    async getPhotosByUsername({
+        username,
+        first,
+        after
+    }: {
+        username: string;
+        first?: number;
+        after?: string;
+    }) {
         const user = await this.getUserByUsername({ username });
         return this.getUserIdPhotos({ id: user.id, first, after });
     }
 
-    async getStoryItemsByUsername({ username }) {
+    async getStoryItemsByUsername({ username }: { username: string }) {
         const user = await this.getUserByUsername({ username });
         return this.getStoryItemsByReel({ reelId: user.id });
     }
 
-    async getStoryItemsByHashtag({ hashtag }) {
+    async getStoryItemsByHashtag({ hashtag }: { hashtag: string }) {
         const reels = await this.getStoryReels({ tagNames: [hashtag] });
         if (reels.length === 0) return [];
         return reels[0].items;
     }
 
-    async getStoryItemsByLocation({ locationId }) {
+    async getStoryItemsByLocation({ locationId }: { locationId: string }) {
         const reels = await this.getStoryReels({ locationIds: [locationId] });
         if (reels.length === 0) return [];
         return reels[0].items;
     }
 
-    async getStoryItemsByReel({ reelId }) {
+    async getStoryItemsByReel({ reelId }: { reelId: string }) {
         const reels = await this.getStoryReels({ reelIds: [reelId] });
         if (reels.length === 0) return [];
         return reels[0].items;
@@ -288,6 +302,12 @@ class Instagram {
         reelId,
         reelMediaTakenAt,
         viewSeenAt
+    }: {
+        reelMediaId: string;
+        reelMediaOwnerId: string;
+        reelId: string;
+        reelMediaTakenAt: string;
+        viewSeenAt: string;
     }) {
         return this.request.post('/stories/reel/seen', {
             form: {
@@ -300,7 +320,15 @@ class Instagram {
         });
     }
 
-    async _getFollowData({ fieldName, queryHash, variables }) {
+    async _getFollowData({
+        fieldName,
+        queryHash,
+        variables
+    }: {
+        fieldName: string;
+        queryHash: string;
+        variables: any;
+    }) {
         return this.request('/graphql/query/', {
             qs: {
                 query_hash: queryHash,
@@ -311,7 +339,7 @@ class Instagram {
             .then(({ count, page_info, edges }) => ({
                 count,
                 page_info,
-                data: edges.map(edge => edge.node)
+                data: edges.map((edge: any) => edge.node)
             }));
     }
 
@@ -355,7 +383,7 @@ class Instagram {
         });
     }
 
-    async getChainsData({ userId }) {
+    async getChainsData({ userId }: { userId: string }) {
         return this.request('/graphql/query/', {
             qs: {
                 query_hash: '7c16654f22c819fb63d1183034a5162f',
@@ -370,7 +398,7 @@ class Instagram {
             }
         })
             .then(data => data.data.user.edge_chaining)
-            .then(({ edges }) => edges.map(edge => edge.node));
+            .then(({ edges }) => edges.map((edge: any) => edge.node));
     }
 
     async getActivity() {
@@ -394,6 +422,15 @@ class Instagram {
         biography = '',
         website = '',
         similarAccountSuggestions = true
+    }: {
+        name?: string;
+        email?: string;
+        username?: string;
+        phoneNumber?: string;
+        gender?: string;
+        biography?: string;
+        website?: string;
+        similarAccountSuggestions?: boolean;
     }) {
         return this.request.post('/accounts/edit/', {
             form: {
@@ -409,7 +446,7 @@ class Instagram {
         });
     }
 
-    async changeProfilePhoto({ photo }) {
+    async changeProfilePhoto({ photo }: { photo: string }) {
         return this.request.post('/accounts/web_change_profile_picture/', {
             formData: {
                 profile_pic: isUrl(photo)
@@ -419,11 +456,11 @@ class Instagram {
         });
     }
 
-    async deleteMedia({ mediaId }) {
+    async deleteMedia({ mediaId }: { mediaId: string }) {
         return this.request.post(`/create/${mediaId}/delete/`);
     }
 
-    async _uploadPhoto({ photo }) {
+    async _uploadPhoto({ photo }: { photo: string }) {
         // Warning! don't change anything bellow.
         const uploadId = Date.now();
 
@@ -491,7 +528,15 @@ class Instagram {
 
     // Upload to story moved to uploadPhoto
     // Post: 'feed' or 'story'
-    async uploadPhoto({ photo, caption = '', post = 'feed' }) {
+    async uploadPhoto({
+        photo,
+        caption = '',
+        post = 'feed'
+    }: {
+        photo: string;
+        caption?: string;
+        post?: string;
+    }) {
         const dateObj = new Date();
         const now = dateObj
             .toISOString()
@@ -525,31 +570,49 @@ class Instagram {
             .then(response => response);
     }
 
-    async getMediaFeedByLocation({ locationId }) {
+    async getMediaFeedByLocation({ locationId }: { locationId: string }) {
         return this.request(`/explore/locations/${locationId}/?__a=1`).then(
             data => data.graphql.location
         );
     }
 
-    async getMediaFeedByHashtag({ hashtag }) {
+    async getMediaFeedByHashtag({ hashtag }: { hashtag: string }) {
         return this.request(`/explore/tags/${hashtag}/?__a=1`).then(
             data => data.graphql.hashtag
         );
     }
 
-    async locationSearch({ query, latitude, longitude, distance = 500 }) {
+    async locationSearch({
+        query,
+        latitude,
+        longitude,
+        distance = 500
+    }: {
+        query: string;
+        latitude: number;
+        longitude: number;
+        distance?: number;
+    }) {
         return this.request('/location_search/', {
             qs: { search_query: query, latitude, longitude, distance }
         }).then(data => data.venues);
     }
 
-    async getMediaByShortcode({ shortcode }) {
+    async getMediaByShortcode({ shortcode }: { shortcode: string }) {
         return this.request(`/p/${shortcode}/?__a=1`).then(
             data => data.graphql.shortcode_media
         );
     }
 
-    async getMediaComments({ shortcode, first = 12, after = '' }) {
+    async getMediaComments({
+        shortcode,
+        first = 12,
+        after = ''
+    }: {
+        shortcode: string;
+        first?: number;
+        after?: string;
+    }) {
         return this.request('/graphql/query/', {
             qs: {
                 query_hash: 'bc3296d1ce80a24b1b6e40b1e72903f5',
@@ -565,7 +628,15 @@ class Instagram {
             }));
     }
 
-    async getMediaLikes({ shortcode, first = 12, after = '' }) {
+    async getMediaLikes({
+        shortcode,
+        first = 12,
+        after = ''
+    }: {
+        shortcode: string;
+        first?: number;
+        after?: string;
+    }) {
         return this.request('/graphql/query/', {
             qs: {
                 query_hash: 'd5d763b1e2acf209d62d22d184488e57',
@@ -602,13 +673,19 @@ class Instagram {
         });
     }
 
-    async deleteComment({ mediaId, commentId }) {
+    async deleteComment({
+        mediaId,
+        commentId
+    }: {
+        mediaId: string;
+        commentId: string;
+    }) {
         return this.request.post(
             `/web/comments/${mediaId}/delete/${commentId}/`
         );
     }
 
-    async getChallenge({ challengeUrl }) {
+    async getChallenge({ challengeUrl }: { challengeUrl: string }) {
         return this.request(`${challengeUrl}?__a=1`);
     }
 
@@ -632,7 +709,15 @@ class Instagram {
         });
     }
 
-    async updateChallenge({ challengeUrl, choice, securityCode }) {
+    async updateChallenge({
+        challengeUrl,
+        choice,
+        securityCode
+    }: {
+        challengeUrl: string;
+        choice: string;
+        securityCode: string;
+    }) {
         const form = securityCode
             ? { security_code: securityCode }
             : { choice };
@@ -643,57 +728,57 @@ class Instagram {
         });
     }
 
-    async resetChallenge({ challengeUrl }) {
+    async resetChallenge({ challengeUrl }: { challengeUrl: string }) {
         return this._navigateChallenge({
             challengeUrl,
             endpoint: 'reset'
         });
     }
 
-    async replayChallenge({ challengeUrl }) {
+    async replayChallenge({ challengeUrl }: { challengeUrl: string }) {
         return this._navigateChallenge({
             challengeUrl,
             endpoint: 'replay'
         });
     }
 
-    async approve({ userId }) {
+    async approve({ userId }: { userId: string }) {
         return this.request.post(`/web/friendships/${userId}/approve/`);
     }
 
-    async ignore({ userId }) {
+    async ignore({ userId }: { userId: string }) {
         return this.request.post(`/web/friendships/${userId}/ignore/`);
     }
 
-    async follow({ userId }) {
+    async follow({ userId }: { userId: string }) {
         return this.request.post(`/web/friendships/${userId}/follow/`);
     }
 
-    async unfollow({ userId }) {
+    async unfollow({ userId }: { userId: string }) {
         return this.request.post(`/web/friendships/${userId}/unfollow/`);
     }
 
-    async block({ userId }) {
+    async block({ userId }: { userId: string }) {
         return this.request.post(`/web/friendships/${userId}/block/`);
     }
 
-    async unblock({ userId }) {
+    async unblock({ userId }: { userId: string }) {
         return this.request.post(`/web/friendships/${userId}/unblock/`);
     }
 
-    async like({ mediaId }) {
+    async like({ mediaId }: { mediaId: string }) {
         return this.request.post(`/web/likes/${mediaId}/like/`);
     }
 
-    async unlike({ mediaId }) {
+    async unlike({ mediaId }: { mediaId: string }) {
         return this.request.post(`/web/likes/${mediaId}/unlike/`);
     }
 
-    async save({ mediaId }) {
+    async save({ mediaId }: { mediaId: string }) {
         return this.request.post(`/web/save/${mediaId}/save/`);
     }
 
-    async unsave({ mediaId }) {
+    async unsave({ mediaId }: { mediaId: string }) {
         return this.request.post(`/web/save/${mediaId}/unsave/`);
     }
 

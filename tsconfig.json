@@ -11,7 +11,7 @@
         "pretty": true,
         "strict": true,
         "outDir": "dist",
-        "rootDir": "lib",
+        "rootDir": "src",
         "sourceMap": true,
         "target": "ES2020",
         "module": "CommonJS",
