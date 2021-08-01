@@ -7,8 +7,8 @@
     "repository": "jlobos/instagram-web-api",
     "author": "Jesus Lobos <jlobitu@gmail.com> (https://jlobos.com)",
     "scripts": {
-        "lint": "xo",
-        "test": "ava"
+        "build": "tsc",
+        "prepare": "npm run build"
     },
     "husky": {
         "hooks": {
