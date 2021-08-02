@@ -8,9 +8,8 @@
     "repository": "jlobos/instagram-web-api",
     "author": "Jesus Lobos <jlobitu@gmail.com> (https://jlobos.com)",
     "scripts": {
-        "build": "tsc",
-        "prepare": "rimraf dist && npm run build",
-        "prepublish": "npm run build"
+        "prepare": "rimraf dist && tsc",
+        "prepublish": "rimraf dist && tsc"
     },
     "husky": {
         "hooks": {
