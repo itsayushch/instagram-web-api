@@ -15,7 +15,7 @@
         "sourceMap": true,
         "target": "ES2020",
         "module": "CommonJS",
-        "declaration": false,
+        "declaration": true,
         "alwaysStrict": true,
         "skipLibCheck": true,
         "esModuleInterop": true,
