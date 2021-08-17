@@ -357,6 +357,7 @@ class Instagram {
             queryHash: '37479f2b8209594dde7facb0d904896a',
             variables: {
                 id: userId,
+                count: first,
                 first,
                 after
             }
